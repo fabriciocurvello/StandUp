@@ -4,4 +4,7 @@
     <string name="alarmon">AlarmOn</string>
     <string name="Toast_Alarm_On">Stand Up Alarm On!</string>
     <string name="Toast_Alarm_Off">Stand Up Alarm Off!</string>
+    <string name="descricao_notificacao">Notificação a cada 15 minutos para levantar e caminhar</string>
+    <string name="alerta_titulo">Alerta para se levantar</string>
+    <string name="alerta_texto">Você precisa se levantar e caminhar agora!</string>
 </resources>
