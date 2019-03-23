@@ -4,6 +4,7 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.NotificationCompat;
 
+import android.app.AlarmManager;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -11,6 +12,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.widget.CompoundButton;
 import android.widget.Toast;
 import android.widget.ToggleButton;
@@ -30,18 +32,42 @@ public class MainActivity extends AppCompatActivity {
         mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 
         ToggleButton alarmToggle = findViewById(R.id.alarmToggle);
+
+        Intent notifyIntent = new Intent(this, AlarmReceiver.class);
+
+        boolean alarmUp = (PendingIntent.getBroadcast(this, NOTIFICATION_ID,
+                notifyIntent, PendingIntent.FLAG_NO_CREATE) != null);
+        alarmToggle.setChecked(alarmUp);
+
+
+        final PendingIntent notifyPendingIntent = PendingIntent.getBroadcast(this, NOTIFICATION_ID, notifyIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        final AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
+
         alarmToggle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 String toastMessage;
                 if (isChecked) {
 
-                    deliverNotification(MainActivity.this);
+                    //deliverNotification(MainActivity.this);
+                    long repeatInterval = AlarmManager.INTERVAL_FIFTEEN_MINUTES;
+                    long triggerTime = SystemClock.elapsedRealtime() + repeatInterval;
+
+                    if (alarmManager != null) {
+                        alarmManager.setInexactRepeating(
+                                AlarmManager.ELAPSED_REALTIME_WAKEUP,
+                                triggerTime, repeatInterval, notifyPendingIntent );
+                    }
                     toastMessage = getString(R.string.Toast_Alarm_On);
 
                 } else {
-
                     mNotificationManager.cancelAll();
+
+                    if (alarmManager != null) {
+                        alarmManager.cancel(notifyPendingIntent);
+                    }
+
                     toastMessage = getString(R.string.Toast_Alarm_Off);
                 }
 
@@ -50,6 +76,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         createNotificationChannel();
+
     }
 
     //Canal de notificações é necessário para Android 8 e superiores
@@ -67,20 +94,5 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void deliverNotification(Context context) {
-        Intent contentIntent = new Intent(context, MainActivity.class);
 
-        PendingIntent conttentPendingIntent = PendingIntent.getActivity(context, NOTIFICATION_ID, contentIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, PRIMARY_CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_stat_name)
-                .setContentTitle(getString(R.string.alerta_titulo))
-                .setContentText(getString(R.string.alerta_texto))
-                .setContentIntent(conttentPendingIntent)
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setAutoCancel(true)
-                .setDefaults(NotificationCompat.DEFAULT_ALL);
-
-        mNotificationManager.notify(NOTIFICATION_ID, builder.build());
-    }
 }
